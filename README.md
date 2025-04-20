@@ -3,7 +3,7 @@ Asp.Net Core Web Api, .Net 6, SQL Server
 ## How to start
 Clone this repo:
 ```bash
-https://github.com/ArthurAnz/AgsrTest.git
+git clone https://github.com/ArthurAnz/AgsrTest.git
 ```
 Go to root folder:
 ```bash
