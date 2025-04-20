@@ -1,43 +1,60 @@
 services:
-    agsr_test_db:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        container_name: agsr_test_db
-        environment:
-            - ACCEPT_EULA=Y
-            - MSSQL_SA_PASSWORD=Password_123!
-            - MSSQL_PID=Express
-        ports:
-            - "1433:1433"
-        restart: always
-        volumes:
-            - agsr_test_data:/var/opt/mssql
- 
-    agsr_test_api:
-        container_name: agsr_test_api
-        ports:
-            - 8080:8080
-        build:
-            context: ./AgsrTest.Api
-            dockerfile: Dockerfile
-        depends_on: 
-            - "agsr_test_db"
-        environment:
-            - ConnectionStrings__DefaultConnection=Server=agsr_test_db;User ID=sa;Password=Password_123!;Database=mydb;Encrypt=False;
-        healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:8080/healthcheck"]
-            interval: 10s
-            timeout: 10s
-            retries: 10
+  agsr_test_db:
+    container_name: agsr_test_db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password_123!
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    restart: always
+    volumes:
+      - agsr_test_data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password_123! -Q 'SELECT 1'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-    agsr_test_console:
-        container_name: agsr_test_console
-        build:
-            context: ./AgsrTest.ConsoleApp
-            dockerfile: Dockerfile
-        depends_on:
-            agsr_test_api:
-                condition: service_healthy
-        entrypoint: ["sh", "-c", "while ! curl -s http://agsr_test_api:8080/healthcheck; do sleep 2; done; dotnet AgsrTest.ConsoleApp.dll"]
-    
+  agsr_test_api:
+    container_name: agsr_test_api
+    ports:
+      - 8080:8080
+    build:
+      context: ./AgsrTest.Api
+      dockerfile: Dockerfile
+    depends_on:
+      agsr_test_db:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=agsr_test_db;User ID=sa;Password=Password_123!;Database=mydb;Encrypt=False;
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthcheck"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  agsr_test_console:
+    container_name: agsr_test_console
+    build:
+      context: ./AgsrTest.ConsoleApp
+      dockerfile: Dockerfile
+    depends_on:
+      agsr_test_api:
+        condition: service_healthy
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        "while ! curl -s http://agsr_test_api:8080/healthcheck; do sleep 2; done; dotnet AgsrTest.ConsoleApp.dll",
+      ]
+
 volumes:
-    agsr_test_data:
+  agsr_test_data:
