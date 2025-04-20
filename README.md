@@ -1,7 +1,15 @@
 # Agsr Test Application
 Asp.Net Core Web Api, .Net 6, SQL Server
 ## How to start
-From the root folder, execute:
+Clone this repo:
+```bash
+https://github.com/ArthurAnz/AgsrTest.git
+```
+Go to root folder:
+```bash
+cd AgsrTest
+```
+Execute (make sure that Docker is working):
 ```bash
 docker compose up --build
 ```
